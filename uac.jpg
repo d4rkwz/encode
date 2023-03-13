@@ -1,7 +1,7 @@
 function Bypass-UAC
 {
     Param(
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [string]$Command
     )
     if(-not ([System.Management.Automation.PSTypeName]'CMSTPBypass').Type)
